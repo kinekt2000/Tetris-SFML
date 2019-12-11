@@ -1,4 +1,5 @@
-#include <QDebug>
+#include <fstream>
+#include <sstream>
 #include "menu.h"
 
 Menu::Menu(int width, int height):
@@ -42,45 +43,93 @@ void Menu::draw(sf::RenderTarget &target, sf::RenderStates) const{
         else option_color = sf::Color(0xE0, 0xE0, 0xE0, 0xFF);
         settings_option.setFillColor(option_color);
 
-        sf::Text quit_option("Quit game", font, 30);
-        quit_option.setPosition(50, height/2+150);
+        sf::Text highscore_option("Highscores", font, 30);
+        highscore_option.setPosition(50, height/2+150);
 
         if(option == 3) option_color = sf::Color(0xFF, 0x80, 0x00, 0xFF);
+        else option_color = sf::Color(0xE0, 0xE0, 0xE0, 0xFF);
+        highscore_option.setFillColor(option_color);
+
+        sf::Text quit_option("Quit game", font, 30);
+        quit_option.setPosition(50, height/2+200);
+
+        if(option == 4) option_color = sf::Color(0xFF, 0x80, 0x00, 0xFF);
         else option_color = sf::Color(0xE0, 0xE0, 0xE0, 0xFF);
         quit_option.setFillColor(option_color);
 
         target.draw(new_game_option);
         target.draw(resume_option);
         target.draw(settings_option);
+        target.draw(highscore_option);
         target.draw(quit_option);
         break;
     }
     case State::Settings:{
-        sf::Text volume_option("Volume:", font, 30);
-        volume_option.setPosition(50, height/2);
+        sf::Text music_option("Music:", font, 30);
+        music_option.setPosition(50, height/2);
 
-        sf::RectangleShape filled_bar(sf::Vector2f(Volume*2, 30));
-        filled_bar.setPosition(50 + volume_option.getLocalBounds().width + 20, height/2);
-        sf::RectangleShape empty_bar(sf::Vector2f(200 - Volume*2, 30));
-        empty_bar.setPosition(filled_bar.getPosition().x+Volume*2, height/2);
+        sf::RectangleShape filled_bar(sf::Vector2f(music_volume*2, 30));
+        filled_bar.setPosition(50 + music_option.getLocalBounds().width + 44, height/2+5);
+        sf::RectangleShape empty_bar(sf::Vector2f(200 - music_volume*2, 30));
+        empty_bar.setPosition(filled_bar.getPosition().x+music_volume*2, height/2+5);
 
         if(option == 0) option_color = sf::Color(0xFF, 0x80, 0x00, 0xFF);
         else option_color = sf::Color(0xE0, 0xE0, 0xE0, 0xFF);
-        volume_option.setFillColor(option_color);
+        music_option.setFillColor(option_color);
         filled_bar.setFillColor(option_color);
         option_color.a = 0x80;
         empty_bar.setFillColor(option_color);
+        target.draw(filled_bar);
+        target.draw(empty_bar);
 
-        sf::Text accept_option("OK", font, 30);
-        accept_option.setPosition(50, height/2+50);
+        sf::Text sounds_option("Sounds:", font, 30);
+        sounds_option.setPosition(50, height/2+50);
+        filled_bar.setSize(sf::Vector2f(sounds_volume*2, 30));
+        filled_bar.setPosition(50 + sounds_option.getLocalBounds().width+20, height/2+50+5);
+        empty_bar.setSize(sf::Vector2f(200 - sounds_volume*2, 30));
+        empty_bar.setPosition(filled_bar.getPosition().x+sounds_volume*2, height/2+50+5);
 
         if(option == 1) option_color = sf::Color(0xFF, 0x80, 0x00, 0xFF);
         else option_color = sf::Color(0xE0, 0xE0, 0xE0, 0xFF);
-        accept_option.setFillColor(option_color);
-
+        sounds_option.setFillColor(option_color);
+        filled_bar.setFillColor(option_color);
+        option_color.a = 0x80;
+        empty_bar.setFillColor(option_color);
         target.draw(filled_bar);
         target.draw(empty_bar);
-        target.draw(volume_option);
+
+
+        sf::Text drop_place_option("Show drop place", font, 30);
+        drop_place_option.setPosition(50, height/2+100);
+
+        if(option == 2) option_color = sf::Color(0xFF, 0x80, 0x00, 0xFF);
+        else option_color = sf::Color(0xE0, 0xE0, 0xE0, 0xFF);
+        drop_place_option.setFillColor(option_color);
+        sf::RectangleShape check_box(sf::Vector2f(24, 24));
+        check_box.setOutlineThickness(3);
+        check_box.setPosition(50+drop_place_option.getLocalBounds().width+23, height/2 + 100 + 7);
+        check_box.setOutlineColor(option_color);
+        check_box.setFillColor(sf::Color(0, 0, 0, 0));
+        target.draw(check_box);
+        if(show_drop_place){
+            check_box.setSize(sf::Vector2f(16, 16));
+            check_box.setOutlineThickness(0);
+            check_box.setFillColor(option_color);
+            check_box.setPosition(50+drop_place_option.getLocalBounds().width+23+4, height/2+100+7+4);
+            target.draw(check_box);
+        }
+
+
+        sf::Text accept_option("OK", font, 30);
+        accept_option.setPosition(50, height/2+150);
+
+        if(option == 3) option_color = sf::Color(0xFF, 0x80, 0x00, 0xFF);
+        else option_color = sf::Color(0xE0, 0xE0, 0xE0, 0xFF);
+        accept_option.setFillColor(option_color);
+
+        target.draw(sounds_option);
+        target.draw(music_option);
+        target.draw(drop_place_option);
         target.draw(accept_option);
         break;
     }
@@ -94,11 +143,11 @@ void Menu::nextOption(){
     case State::Main:
         option++;
         if(game_not_started && option == 1) option = 2;
-        if(option > 3) option = 0;
+        if(option > 4) option = 0;
         break;
     case State::Settings:
         option++;
-        if(option > 1) option = 0;
+        if(option > 3) option = 0;
         break;
     }
 }
@@ -109,11 +158,11 @@ void Menu::prevOption(){
     case State::Main:
         option--;
         if(game_not_started && option == 1) option = 0;
-        if(option < 0) option = 3;
+        if(option < 0) option = 4;
         break;
     case State::Settings:
         option--;
-        if(option < 0) option = 1;
+        if(option < 0) option = 3;
         break;
     }
 }
@@ -142,23 +191,45 @@ Menu::State Menu::getState(){
 }
 
 
-void Menu::changeVolume(int delta){
-    Volume +=delta;
-    if(Volume > 100) Volume = 100;
-    if(Volume < 0) Volume = 0;
+void Menu::changeMusicVolume(int delta){
+    music_volume +=delta;
+    if(music_volume > 100) music_volume = 100;
+    if(music_volume < 0) music_volume = 0;
 }
 
 
-int Menu::getVolume(){
-    return Volume;
+void Menu::changeSoundsVolume(int delta){
+    sounds_volume += delta;
+    if(sounds_volume > 100) sounds_volume = 100;
+    if(sounds_volume < 0) sounds_volume = 0;
+}
+
+
+int Menu::getMusicVolume(){
+    return music_volume;
+}
+
+
+int Menu::getSoundsVolume(){
+    return sounds_volume;
+}
+
+
+void Menu::setDropPlaceState(bool state){
+    show_drop_place = state;
+}
+
+
+bool Menu::getDropPlaceState(){
+    return show_drop_place;
 }
 
 
 Game_Over::Game_Over(int width, int height):
     width(width), height(height)
-{
+{   
     game_over_font.loadFromFile("tetris.ttf");
-    to_menu_font.loadFromFile("whitestone.otf");
+    additional_font.loadFromFile("whitestone.otf");
 
     max_frames = int(width/outline_thick/1.5);
 }
@@ -172,15 +243,20 @@ void Game_Over::draw(sf::RenderTarget &target, sf::RenderStates) const{
     game_over_msg.setPosition((width - text_rect.width)/2, height/4);
     game_over_msg.setFillColor(sf::Color::Red);
 
-    sf::Text to_menu_msg("Press Enter to exit the menu", to_menu_font, 20);
+    sf::Text to_menu_msg("Press Enter to exit the menu", additional_font, 20);
     text_rect = to_menu_msg.getLocalBounds();
     to_menu_msg.setPosition((width-text_rect.width)/2, height-40);
     to_menu_msg.setFillColor(sf::Color::White);
 
-    sf::Text score("Your score: " + std::to_string(final_score), to_menu_font, 30);
+    sf::Text score("Your score: " + std::to_string(final_score), additional_font, 30);
     text_rect = score.getLocalBounds();
-    score.setPosition((width-text_rect.width)/2, height-75);
+    score.setPosition((width-text_rect.width)/2, height-170);
     score.setFillColor(sf::Color::White);
+
+    sf::Text enter_name_label("Enter your name:", additional_font, 20);
+    text_rect = enter_name_label.getLocalBounds();
+    enter_name_label.setPosition((width-text_rect.width)/2, height - 130);
+    enter_name_label.setFillColor(sf::Color::White);
 
     sf::RectangleShape shape;
     if (frame < max_frames){
@@ -204,6 +280,15 @@ void Game_Over::draw(sf::RenderTarget &target, sf::RenderStates) const{
         }
         target.draw(shape);
     } else {
+        std::string tmp_name = name;
+        for(unsigned int i = 0; i < 6 - name.size(); i++)
+            tmp_name.push_back('_');
+
+        sf::Text name_text(tmp_name, additional_font, 30);
+        name_text.setFillColor(sf::Color::White);
+        text_rect = name_text.getLocalBounds();
+        name_text.setPosition((width - text_rect.width)/2, height - 110);
+
         shape.setSize(sf::Vector2f(width, height));
         shape.setFillColor(sf::Color(0x20, 0x20, 0x20, 0xFF));
         shape.setPosition(0,0);
@@ -211,6 +296,8 @@ void Game_Over::draw(sf::RenderTarget &target, sf::RenderStates) const{
         target.draw(game_over_msg);
         target.draw(to_menu_msg);
         target.draw(score);
+        target.draw(enter_name_label);
+        target.draw(name_text);
     }
 }
 
@@ -242,10 +329,37 @@ void Game_Over::setFrame(int frame){
 }
 
 
+int Game_Over::getFrame(){
+    return frame;
+}
+
+
 bool Game_Over::finished(){
     if (frame == max_frames)
         return 1;
     return 0;
+}
+
+
+void Game_Over::addLetter(char l){
+    if(name.size() < 6)
+        name.push_back(l);
+}
+
+
+void Game_Over::delLetter(){
+    if (name.size() > 0)
+        name.pop_back();
+}
+
+
+std::string Game_Over::getName(){
+    return name;
+}
+
+
+int Game_Over::getScore(){
+    return final_score;
 }
 
 
@@ -333,7 +447,7 @@ void Statistic::countBlock(Block::Type type){
 void Statistic::showBlock(const Block &block){
     if(showing_block) delete showing_block;
 
-    showing_block = new Block(block.cell_size, block.outline_thick, 0, 0, block.type, block.color);
+    showing_block = new Block(block.cell_size, block.outline_thick, 0, 0, block.type, block.fill_color);
     showing_block->x = 11;
     showing_block->y = 4;
 }
@@ -351,7 +465,169 @@ void Statistic::reset(){
 }
 
 
+Highscore::Highscore(int width, int height, const char* path):
+    width(width), height(height)
+{
+    this->path = std::string(path);
+    font.loadFromFile("whitestone.otf");
+}
 
+bool cmp(const std::pair<std::string, int> &a,
+         const std::pair<std::string, int> &b){
+    if(a.second == b.second) return a.first < b.first;
+    return a.second > b.second;
+}
+
+
+void Highscore::draw(sf::RenderTarget &target, sf::RenderStates) const{
+    target.clear();
+    sf::Text board_label("Highscore", font, 45);
+    board_label.setPosition((width-board_label.getLocalBounds().width)/2, 13);
+    target.draw(board_label);
+
+    sf::Text exit_msg("Press enter to exit menu", font, 20);
+    exit_msg.setPosition((width-exit_msg.getLocalBounds().width)/2, height-65);
+    target.draw(exit_msg);
+
+    sf::Text name("", font, 30);
+    sf::Text score("", font, 30);
+
+    for(unsigned int i = 0; i < table.size() && i < 10; i++){
+        auto item = table[i];
+        name.setString(item.first);
+        name.setPosition(55, 80+40*i);
+
+        score.setString(std::to_string(item.second));
+        score.setPosition(width-35-score.getLocalBounds().width, 80+40*i);
+
+        target.draw(name);
+        target.draw(score);
+    }
+
+    sf::Text number("", font, 30);
+    sf::RectangleShape line(sf::Vector2f(width-25-35+2, 2));
+    for(unsigned int i = 0; i < 10; i++){
+        number.setString(std::to_string(i+1)+". ");
+        number.setPosition(25, 80+40*i);
+
+        line.setPosition(25, 113+40*i);
+        target.draw(line);
+        target.draw(number);
+    }
+}
+
+
+void Highscore::addToTable(const std::string &name, int score){
+    table.emplace_back(name, score);
+    if(table.size()>10)
+        table.pop_back();
+    std::sort(table.begin(), table.end(), cmp);
+}
+
+
+void Highscore::save(){
+    std::stringstream stream;
+    std::string line;
+    for(unsigned i = 0; i < token.size(); i++){
+        stream << char(token[i] - (char(i)+1));
+    }
+    stream << "\n";
+    for(auto item: table){
+        line += item.first;
+        line += std::string(10, '.');
+        line += std::to_string(item.second);
+
+        for(unsigned int i = 0; i < line.size(); i++){
+            line[i] = char(line[i]-(char(i)+1));
+        }
+
+        stream << line << '\n';
+        line = "";
+    }
+
+    std::ofstream outFile(path);
+    if(outFile.is_open()){
+        outFile << stream.str();
+    }
+}
+
+
+void Highscore::open(){
+    std::ifstream stream;
+    stream.open(path);
+    if (!stream.is_open()){
+        opened = 0;
+        return;
+    }
+
+    std::string raw;
+    std::string name;
+    std::string tmp_scr;
+    int score;
+
+    std::getline(stream, raw);
+    for(unsigned int i = 0; i < raw.length(); i++){
+        raw[i] += char(i)+1;
+    }
+
+    if(raw != token){
+        stream.close();
+        std::ofstream out(path, std::ofstream::out | std::ofstream::trunc);
+        for(unsigned int i = 0; i < token.size(); i++){
+            out << char(token[i] - (char(i)+1));
+        }
+        out << "\n";
+        out.close();
+        return;
+    }
+
+    bool success = 1;
+    int i;
+    for(i = 0; i < 10 && stream.good(); i++){
+        std::getline(stream, raw);
+
+        if(raw.empty()) continue;
+
+        for(unsigned int i = 0; i < raw.size(); i++){
+            raw[i] += char(i) + 1;
+        }
+
+        unsigned int j;
+        for(j = 0; raw[j]!='.'; j++)
+            name.push_back(raw[j]);
+        for(auto c: name)
+            if((c < 'A' || c > 'Z') && (c < 'a' || c > 'z')){
+                success = 0;
+                break;
+            }
+        if (success == 0) break;
+
+        for(j; raw[j] == '.'; j++);
+        tmp_scr.assign(raw.begin()+int(j), raw.end());
+        for(auto c: tmp_scr)
+            if(c < '0' || c > '9'){
+                success = 0;
+                break;
+            }
+        if (success == 0) break;
+
+        score = std::stoi(tmp_scr);
+        table.emplace_back(name, score);
+        name.clear();
+    }
+    stream.close();
+    if(success == 0){
+        std::ofstream out(path, std::ofstream::out | std::ofstream::trunc);
+        for(unsigned int i = 0; i < token.size(); i++){
+            out << char(token[i] - (char(i)+1));
+        }
+        out << "\n";
+        out.close();
+        table.clear();
+        return;
+    }
+    std::sort(table.begin(), table.end(), cmp);
+}
 
 
 

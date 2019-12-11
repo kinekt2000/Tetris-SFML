@@ -37,8 +37,8 @@ void Cell::draw(sf::RenderTarget &target, sf::RenderStates) const{
 }
 
 
-Block::Block(int cell_size, int outline_thick, int pos_x, int pos_y, Type type, sf::Color color):
-    type(type), color(color), x(pos_x), y(pos_y), cell_size(cell_size), outline_thick(outline_thick)
+Block::Block(int cell_size, int outline_thick, int pos_x, int pos_y, Type type, sf::Color fill_color, sf::Color line_color):
+    type(type), fill_color(fill_color), line_color(line_color), x(pos_x), y(pos_y), cell_size(cell_size), outline_thick(outline_thick)
 {
     for(int i = 0; i < 4; i++)
         for(int j = 0; j < 4; j++)
@@ -108,7 +108,7 @@ void Block::draw(sf::RenderTarget &target, sf::RenderStates) const{
     for(int i = 0; i < 4; i++){
         for(int j = 0; j < 4; j++){
             if(figure[i][j]){
-                Cell cell(cell_size, outline_thick, x+j, y+i, color);
+                Cell cell(cell_size, outline_thick, x+j, y+i, fill_color, line_color);
                 target.draw(cell);
             }
         }
@@ -153,13 +153,14 @@ bool Block::checkCollision(const Pit &pit){
 }
 
 
-void Block::reset(int cell_size, int outline_thick, int pos_x, int pos_y, Type type, sf::Color color){
+void Block::reset(int cell_size, int outline_thick, int pos_x, int pos_y, Type type, sf::Color fill_color, sf::Color line_color){
     this->type = type;
     this->cell_size = cell_size;
     this->outline_thick = outline_thick;
     this->x = pos_x;
     this->y = pos_y;
-    this->color = color;
+    this->fill_color = fill_color;
+    this->line_color = line_color;
     
     for(int i = 0; i < 4; i++)
         for(int j = 0; j < 4; j++)
@@ -270,13 +271,44 @@ Block::Type Block::getType(){
 }
 
 
+void Block::setFillColor(const sf::Color &color){
+    fill_color = color;
+}
+
+
+void Block::setLineColor(const sf::Color &color){
+    line_color = color;
+}
+
+
+void Block::setX(int x){
+    this->x = x;
+}
+
+
+void Block::setY(int y){
+    this->y = y;
+}
+
+
+int Block::getX(){
+    return x;
+}
+
+
+int Block::getY(){
+    return y;
+}
+
+
 void Block::operator=(const Block &equal){
     for(int i = 0; i < 4; i++)
         for(int j = 0; j < 4; j++)
             figure[i][j] = equal.figure[i][j];
     
     type = equal.type;
-    color = equal.color;
+    fill_color = equal.fill_color;
+    line_color = equal.line_color;
     x = equal.x;
     y = equal.y;
     cell_size = equal.cell_size;
@@ -287,6 +319,10 @@ void Block::operator=(const Block &equal){
 Pit::Pit(int cell_size, int outline_thick, unsigned int width, unsigned int height):
     cell_size(cell_size), thick(outline_thick), width(int(width)), height(int(height))
 {
+    line_buffer.loadFromFile("line.wav");
+    line.setBuffer(line_buffer);
+    line.setVolume(100.f);
+
     field = new int*[height];
     for(size_t i = 0; i < height; i++){
         field[i] = new int[width];
@@ -351,13 +387,16 @@ void Pit::addBlock(const Block &block){
     for(int i = 0; i < 4; i++)
         for(int j = 0; j < 4; j++){
             if(block.figure[i][j] && i+block.y >= 0 && i+block.y < height && j+block.x >= 0 && j+block.x < width){
-                field[i+block.y][j+block.x] = color_table.getColorID(block.color);
+                field[i+block.y][j+block.x] = color_table.getColorID(block.fill_color);
             }
         }
 }
 
 
-void Pit::checkLines(){
+int Pit::checkLines(){
+    bool first_frame = 0;
+    int count = 0;
+
     for(int i = 0; i < height; i++){
         int full_line = 1;
 
@@ -366,7 +405,8 @@ void Pit::checkLines(){
 
         if(full_line){
             int line_marked = 1;
-            for(int j = 0; j < width/2; j++){
+            int j;
+            for(j = 0; j < width/2; j++){
                 if(field[i][j] != 8){
                     line_marked = 0;
                     field[i][j] = 8;
@@ -374,14 +414,18 @@ void Pit::checkLines(){
                     break;
                 }
             }
+            if(j == 0) first_frame = 1;
 
-            if(line_marked)
+            if(line_marked){
                 for(int r = i; r > 0; r--)
                     for(int c = 0; c < width; c++)
                         field[r][c] = field[r-1][c];
+                count++;
+            }
         }
     }
-
+    if(first_frame) line.play();
+    return count;
 }
 
 
@@ -390,6 +434,40 @@ bool Pit::checkOverflow(){
     for(int i = 0; i < width && !overflowed; i++)
         if(field[0][i]) overflowed = true;
     return overflowed;
+}
+
+
+void Pit::changeLineSound(float volume){
+    line.setVolume(volume);
+}
+
+
+int Pit::projectionY(const Block &block){
+    int y = -1;
+
+    bool figure[4][4] = {{0},{0},{0},{0}};
+    for(int i = 0; i < 4; i++)
+        for(int j = 0; j <4; j++)
+            if(block.figure[i][j])
+                figure[i][j] = 1;
+
+    bool collided = 0;
+    while(!collided){
+        y++;
+        for(int k = 0; k < 16; k++){
+            int i = k/4;
+            int j = k%4;
+
+            if(figure[i][j]){
+                if(i + y >= height || field[i+y][j+block.x]){
+                    collided = 1;
+                    y--;
+                    break;
+                }
+            }
+        }
+    }
+    return y;
 }
 
 

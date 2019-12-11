@@ -2,6 +2,7 @@
 #define GAME_ELEMS_H
 
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 
 class ColorTable
 {
@@ -51,18 +52,27 @@ class Block: public sf::Drawable
 public:
     enum Type{ I=1, S=2, Z=3, L=4, J=5, T=6, O=7 };
 
-    Block(int cell_size, int outline_thick, int pos_x, int pos_y, Type type, sf::Color color);
+    Block(int cell_size, int outline_thick, int pos_x, int pos_y, Type type, sf::Color fill_color, sf::Color line_color = sf::Color::Black);
     void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
 
     void move(int x_off, int y_off);
     void move(Direction dir);
     bool checkCollision(const Pit &pit);
-    void reset(int cell_size, int outline_thick, int pos_x, int pos_y, Type type, sf::Color color);
+    void reset(int cell_size, int outline_thick, int pos_x, int pos_y, Type type, sf::Color fill_color, sf::Color line_color = sf::Color::Black);
     
     void rotateRight();
     void rotateLeft();
 
     Type getType();
+
+    void setFillColor(const sf::Color &color);
+    void setLineColor(const sf::Color &color);
+
+    void setX(int x);
+    void setY(int y);
+
+    int getX();
+    int getY();
 
     void operator=(const Block &equal);
 
@@ -70,7 +80,8 @@ public:
 private:
     Type type;
     int figure[4][4];
-    sf::Color color;
+    sf::Color fill_color;
+    sf::Color line_color;
     int x, y;
     int cell_size;
     int outline_thick;
@@ -86,8 +97,12 @@ public:
     void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
 
     void addBlock(const Block &block);
-    void checkLines();
+    int checkLines();
     bool checkOverflow();
+
+    void changeLineSound(float volume);
+
+    int projectionY(const Block &block);
 
     void clear();
     
@@ -98,6 +113,9 @@ private:
     int thick;
     int width;
     int height;
+
+    sf::SoundBuffer line_buffer;
+    sf::Sound line;
 };
 
 #endif // GAME_ELEMS_H
