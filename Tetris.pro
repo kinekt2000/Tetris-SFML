@@ -84,13 +84,25 @@ DEPENDPATH += "C:\SFML-2.5.1\include"
 
 
 SOURCES += \
-    game_elements.cpp \
+    block.cpp \
+    cell.cpp \
+    colortable.cpp \
+    gameover.cpp \
+    highscore.cpp \
     main.cpp \
-    menu.cpp
+    menu.cpp \
+    pit.cpp \
+    statistic.cpp
 
 HEADERS += \
-    game_elements.h \
-    menu.h
+    block.h \
+    cell.h \
+    colortable.h \
+    gameover.h \
+    highscore.h \
+    menu.h \
+    pit.h \
+    statistic.h
 
 # Default rules for deployment.
 #qnx: target.path = /tmp/$${TARGET}/bin

@@ -24,14 +24,21 @@
 // User name input +
 // Highscore table +
 
-#include <SFML/Graphics.hpp>
-#include <SFML/Audio.hpp>
+
+#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Window/Event.hpp>
+#include <SFML/Audio/Music.hpp>
+
 #include <random>
 #include <ctime>
 
-#include "game_elements.h"
+#include "block.h"
+#include "pit.h"
+#include "colortable.h"
 #include "menu.h"
-
+#include "gameover.h"
+#include "statistic.h"
+#include "highscore.h"
 
 const int cell_size = 30;
 const int cell_outline_thick = 3;
@@ -61,7 +68,7 @@ int main()
     Statistic stats(statistic_size, height*cell_size+cell_outline_thick, width*cell_size+cell_outline_thick);
     Highscore highscore(statistic_size + width*cell_size+cell_outline_thick, height*cell_size+cell_outline_thick, "highscore.bin");
     highscore.open();
-    Game_Over game_over_screen(width*cell_size+cell_outline_thick, height*cell_size+cell_outline_thick);
+    GameOver game_over_screen(width*cell_size+cell_outline_thick, height*cell_size+cell_outline_thick);
     Game_State state = not_started;
     bool show_highscore = 0;
 
